@@ -309,16 +309,16 @@ const Gallery = () => {
         </Card>
       )}
 
-      <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
         {galleryItems.map((item) => (
           <div key={item.id} className="relative group flex justify-center items-center">
             <img
               src={item.image_url}
               alt="Gallery"
-              className="cursor-pointer"
+              className="cursor-pointer gallery-img"
               style={{
-                maxWidth: '60px',
-                maxHeight: '50px',
+                maxWidth: '180px',
+                maxHeight: '140px',
                 width: 'auto',
                 height: 'auto',
                 display: 'block',
@@ -372,8 +372,8 @@ const Gallery = () => {
       <style>{`
         @media (min-width: 768px) {
           .gallery-img {
-            max-width: 100px !important;
-            max-height: 80px !important;
+            max-width: 220px !important;
+            max-height: 180px !important;
           }
         }
       `}</style>

@@ -58,7 +58,7 @@ const Index = () => {
                   </Button>
                 </Link>
                 <a 
-                  href="https://instagram.com/sortie_unique" 
+                  href="https://www.instagram.com/sortieunique.dz?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="text-primary hover:text-orange-600 transition-colors flex items-center gap-2 bg-white/80 px-6 py-3 rounded-full hover:bg-white/90 shadow-md"

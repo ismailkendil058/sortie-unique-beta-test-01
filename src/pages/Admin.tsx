@@ -23,6 +23,7 @@ import {
   AlertDialogCancel
 } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 
 const Admin = () => {
   const { t } = useLanguage();
@@ -30,6 +31,7 @@ const Admin = () => {
   const navigate = useNavigate();
 
   const [bookings, setBookings] = useState([]);
+  const [trips, setTrips] = useState([]);
   const [editingBooking, setEditingBooking] = useState(null);
   const [editForm, setEditForm] = useState({
     id: '',
@@ -50,12 +52,21 @@ const Admin = () => {
     if (!error) setBookings(data);
   };
 
+  const fetchTrips = async () => {
+    const { data, error } = await supabase
+      .from('trips')
+      .select('*')
+      .eq('is_available', true);
+    if (!error) setTrips(data);
+  };
+
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');
     }
     if (!loading && user) {
       fetchBookings();
+      fetchTrips();
       // Subscribe to realtime changes
       const subscription = supabase
         .channel('bookings-db-changes')
@@ -68,6 +79,11 @@ const Admin = () => {
       };
     }
   }, [user, loading, navigate]);
+
+  const getTripName = (tripId) => {
+    const trip = trips.find((t) => t.id === tripId);
+    return trip ? trip.title : tripId;
+  };
 
   const handleLogout = async () => {
     await signOut();
@@ -87,7 +103,7 @@ const Admin = () => {
         booking.name,
         booking.email,
         booking.phone,
-        booking.trip,
+        getTripName(booking.trip),
         booking.people,
         booking.pickup,
         booking.date,
@@ -157,6 +173,17 @@ const Admin = () => {
     }
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    await supabase.from('bookings').insert([
+      {
+        // ...other fields,
+        trip: formData.trip, // this is now the UUID
+        // ...
+      }
+    ]);
+  };
+
   if (loading) {
     return (
       <Layout>
@@ -215,7 +242,18 @@ const Admin = () => {
                           <input className="border p-2 rounded" placeholder="Name" value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} />
                           <input className="border p-2 rounded" placeholder="Email" value={editForm.email} onChange={e => setEditForm(f => ({ ...f, email: e.target.value }))} />
                           <input className="border p-2 rounded" placeholder="Phone" value={editForm.phone} onChange={e => setEditForm(f => ({ ...f, phone: e.target.value }))} />
-                          <input className="border p-2 rounded" placeholder="Trip" value={editForm.trip} onChange={e => setEditForm(f => ({ ...f, trip: e.target.value }))} />
+                          <Select value={editForm.trip} onValueChange={value => setEditForm(f => ({ ...f, trip: value }))} className="border p-2 rounded">
+                            <SelectTrigger>
+                              {getTripName(editForm.trip)}
+                            </SelectTrigger>
+                            <SelectContent>
+                              {trips.map(trip => (
+                                <SelectItem key={trip.id} value={trip.id}>
+                                  {trip.title}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                           <input className="border p-2 rounded" placeholder="People" value={editForm.people} onChange={e => setEditForm(f => ({ ...f, people: e.target.value }))} />
                           <input className="border p-2 rounded" placeholder="Notes" value={editForm.notes} onChange={e => setEditForm(f => ({ ...f, notes: e.target.value }))} />
                           <select className="border p-2 rounded" value={editForm.status} onChange={e => setEditForm(f => ({ ...f, status: e.target.value }))}>
@@ -236,7 +274,7 @@ const Admin = () => {
                           <p className="text-gray-600">{booking.phone}</p>
                         </div>
                         <div>
-                          <p><strong>Trip:</strong> {booking.trip}</p>
+                          <p><strong>Trip:</strong> {getTripName(booking.trip)}</p>
                           <p><strong>People:</strong> {booking.people}</p>
                           {booking.notes && <p><strong>Notes:</strong> {booking.notes}</p>}
                         </div>

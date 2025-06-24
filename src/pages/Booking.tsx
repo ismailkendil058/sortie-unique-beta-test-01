@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
@@ -25,11 +25,34 @@ const Booking = () => {
     notes: ''
   });
 
-  const trips = [
-    { id: '1', name: 'Sahara Desert Adventure', price: 45000 },
-    { id: '2', name: 'Kabylie Mountains Trek', price: 28000 },
-    { id: '3', name: 'Mediterranean Coast Discovery', price: 35000 }
-  ];
+  const [trips, setTrips] = useState([]);
+  const [loadingTrips, setLoadingTrips] = useState(true);
+  const [tripsError, setTripsError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchTrips = async () => {
+      setLoadingTrips(true);
+      setTripsError(null);
+      const { data, error } = await supabase
+        .from('trips')
+        .select('id, title, price, is_available')
+        .eq('is_available', true);
+      if (error) {
+        setTripsError('Failed to load trips.');
+        setTrips([]);
+      } else {
+        setTrips(
+          (data || []).map(trip => ({
+            id: trip.id,
+            name: trip.title, // for compatibility with old code
+            price: trip.price
+          }))
+        );
+      }
+      setLoadingTrips(false);
+    };
+    fetchTrips();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,24 +149,30 @@ const Booking = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="trip">{t('booking.trip')} *</Label>
-                    <Select value={formData.trip} onValueChange={(value) => setFormData({...formData, trip: value})}>
-                      <SelectTrigger className="rounded-lg border-2 border-primary/30 focus:ring-2 focus:ring-primary/40 px-4 py-3 text-base font-medium bg-white shadow-sm">
-                        <SelectValue placeholder="Select a trip">
-                          {trips.find(trip => trip.id === formData.trip)?.name || ''}
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent className="rounded-lg shadow-lg bg-white">
-                        {trips.map((trip) => (
-                          <SelectItem
-                            key={trip.id}
-                            value={trip.id}
-                            className="px-4 py-3 rounded-lg flex flex-col items-start gap-1 hover:bg-primary/10 transition-colors cursor-pointer"
-                          >
-                            <span className="font-semibold text-gray-900">{trip.name}</span>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    {loadingTrips ? (
+                      <div className="text-gray-500 text-sm py-2">Loading trips...</div>
+                    ) : tripsError ? (
+                      <div className="text-red-500 text-sm py-2">{tripsError}</div>
+                    ) : (
+                      <Select value={formData.trip} onValueChange={(value) => setFormData({...formData, trip: value})}>
+                        <SelectTrigger className="rounded-lg border-2 border-primary/30 focus:ring-2 focus:ring-primary/40 px-4 py-3 text-base font-medium bg-white shadow-sm">
+                          <SelectValue placeholder="Select a trip">
+                            {trips.find(trip => trip.id === formData.trip)?.name || ''}
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent className="rounded-lg shadow-lg bg-white">
+                          {trips.map((trip) => (
+                            <SelectItem
+                              key={trip.id}
+                              value={trip.id}
+                              className="px-4 py-3 rounded-lg flex flex-col items-start gap-1 hover:bg-primary/10 transition-colors cursor-pointer"
+                            >
+                              <span className="font-semibold text-gray-900">{trip.name}</span>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
                   </div>
 
                   <div className="space-y-2">

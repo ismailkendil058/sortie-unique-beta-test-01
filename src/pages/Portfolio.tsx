@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import Layout from '@/components/Layout';
@@ -94,7 +93,7 @@ const Portfolio = () => {
               View Our Voyages
             </a>
             <a 
-              href="https://instagram.com/sortie_unique" 
+              href="https://www.instagram.com/sortieunique.dz?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" 
               target="_blank" 
               rel="noopener noreferrer"
               className="border border-primary text-primary hover:bg-primary hover:text-white px-8 py-3 rounded-md font-medium transition-colors"

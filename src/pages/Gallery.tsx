@@ -57,7 +57,7 @@ const Gallery = () => {
             <p className="text-gray-600">No images in the gallery yet.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          <div className={`grid ${galleryItems.length === 2 ? 'grid-cols-2' : 'grid-cols-3'} gap-2`}>
             {galleryItems.map((item) => (
               <img
                 key={item.id}

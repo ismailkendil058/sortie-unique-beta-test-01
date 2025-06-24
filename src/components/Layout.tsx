@@ -74,7 +74,7 @@ const Layout = ({
               {language === 'en' ? 'Connecting you with Algeria\'s pristine natural beauty and authentic cultural experiences' : 'Vous connecter avec la beauté naturelle pristine de l\'Algérie et les expériences culturelles authentiques'}
             </p>
             <div className="flex justify-center space-x-6">
-              <a href="https://instagram.com/sortie_unique" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-orange-600 transition-colors bg-white/80 px-4 py-2 rounded-full hover:bg-white shadow-md hover:shadow-lg">
+              <a href="https://www.instagram.com/sortieunique.dz?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-orange-600 transition-colors bg-white/80 px-4 py-2 rounded-full hover:bg-white shadow-md hover:shadow-lg">
                 Instagram
               </a>
             </div>
