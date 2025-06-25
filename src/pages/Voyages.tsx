@@ -24,6 +24,7 @@ const Voyages = () => {
         const { data, error } = await supabase
           .from('trips')
           .select('*')
+          .eq('is_available', true)
           .order('created_at', { ascending: false });
         if (error) throw error;
         // Map DB fields to expected fields for UI

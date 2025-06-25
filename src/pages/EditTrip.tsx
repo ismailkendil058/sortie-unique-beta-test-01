@@ -111,7 +111,8 @@ const EditTrip = () => {
         max_people: parseInt(formData.maxPeople) || 0,
         price: parseFloat(formData.price) || 0,
         image: imageUrl,
-        features: formData.features.split(',').map(f => f.trim()).filter(f => f)
+        features: formData.features.split(',').map(f => f.trim()).filter(f => f),
+        is_available: true
       };
       const { error } = await supabase
         .from('trips')

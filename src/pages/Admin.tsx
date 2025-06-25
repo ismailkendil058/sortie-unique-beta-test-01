@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 
 const Admin = () => {
   const { t } = useLanguage();
@@ -46,6 +47,8 @@ const Admin = () => {
   });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [bookingToDelete, setBookingToDelete] = useState(null);
+  const [coupons, setCoupons] = useState<any[]>([]);
+  const [couponForm, setCouponForm] = useState({ code: '', discount: 0 });
 
   const fetchBookings = async () => {
     const { data, error } = await supabase.from('bookings').select('*').order('created_at', { ascending: false });
@@ -60,6 +63,11 @@ const Admin = () => {
     if (!error) setTrips(data);
   };
 
+  const fetchCoupons = async () => {
+    const { data } = await supabase.from('coupons').select('*').order('created_at', { ascending: false });
+    setCoupons(data || []);
+  };
+
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');
@@ -67,6 +75,7 @@ const Admin = () => {
     if (!loading && user) {
       fetchBookings();
       fetchTrips();
+      fetchCoupons();
       // Subscribe to realtime changes
       const subscription = supabase
         .channel('bookings-db-changes')
@@ -184,6 +193,23 @@ const Admin = () => {
     ]);
   };
 
+  const addCoupon = async () => {
+    if (!couponForm.code || !couponForm.discount) return;
+    await supabase.from('coupons').insert([{ ...couponForm, is_active: true }]);
+    setCouponForm({ code: '', discount: 0 });
+    fetchCoupons();
+  };
+
+  const toggleCouponActive = async (id: number, is_active: boolean) => {
+    await supabase.from('coupons').update({ is_active: !is_active }).eq('id', id);
+    fetchCoupons();
+  };
+
+  const deleteCoupon = async (id: number) => {
+    await supabase.from('coupons').delete().eq('id', id);
+    fetchCoupons();
+  };
+
   if (loading) {
     return (
       <Layout>
@@ -212,10 +238,11 @@ const Admin = () => {
         </div>
 
         <Tabs defaultValue="bookings" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="bookings">Bookings</TabsTrigger>
             <TabsTrigger value="trips">Trips</TabsTrigger>
             <TabsTrigger value="gallery">Gallery</TabsTrigger>
+            <TabsTrigger value="coupons">Coupons</TabsTrigger>
           </TabsList>
 
           <TabsContent value="bookings" className="space-y-6">
@@ -277,6 +304,7 @@ const Admin = () => {
                           <p><strong>Trip:</strong> {getTripName(booking.trip)}</p>
                           <p><strong>People:</strong> {booking.people}</p>
                           {booking.notes && <p><strong>Notes:</strong> {booking.notes}</p>}
+                          <p><strong>Coupon:</strong> {booking.coupon_code ? booking.coupon_code : 'No coupon'}</p>
                         </div>
                         <div className="flex items-center justify-between gap-2">
                           <div>
@@ -336,6 +364,26 @@ const Admin = () => {
           <TabsContent value="gallery" className="space-y-6">
             <h2 className="text-2xl font-semibold">Manage Gallery</h2>
             <Gallery />
+          </TabsContent>
+
+          <TabsContent value="coupons" className="space-y-6">
+            <h2 className="text-2xl font-semibold">Manage Coupons</h2>
+            <div className="flex gap-2 mb-4">
+              <Input placeholder="Code (e.g. rafik20)" value={couponForm.code} onChange={e => setCouponForm(f => ({ ...f, code: e.target.value }))} />
+              <Input type="number" placeholder="Discount %" value={couponForm.discount} onChange={e => setCouponForm(f => ({ ...f, discount: Number(e.target.value) }))} />
+              <Button onClick={addCoupon}>Add Coupon</Button>
+            </div>
+            <ul className="space-y-2">
+              {coupons.map(c => (
+                <li key={c.id} className="flex items-center gap-4 p-2 border rounded">
+                  <span className="font-mono">{c.code}</span>
+                  <span>{c.discount}%</span>
+                  <span className={c.is_active ? 'text-green-600' : 'text-gray-400'}>{c.is_active ? 'Active' : 'Inactive'}</span>
+                  <Button size="sm" variant="outline" onClick={() => toggleCouponActive(c.id, c.is_active)}>{c.is_active ? 'Deactivate' : 'Activate'}</Button>
+                  <Button size="sm" variant="destructive" onClick={() => deleteCoupon(c.id)}>Delete</Button>
+                </li>
+              ))}
+            </ul>
           </TabsContent>
         </Tabs>
       </div>

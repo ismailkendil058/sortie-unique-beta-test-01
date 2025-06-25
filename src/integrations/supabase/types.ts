@@ -122,6 +122,72 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      },
+      coupons: {
+        Row: {
+          id: number;
+          code: string;
+          discount: number;
+          is_active: boolean;
+          created_at: string;
+          expires_at: string | null;
+        }
+        Insert: {
+          id?: number;
+          code: string;
+          discount: number;
+          is_active?: boolean;
+          created_at?: string;
+          expires_at?: string | null;
+        }
+        Update: {
+          id?: number;
+          code?: string;
+          discount?: number;
+          is_active?: boolean;
+          created_at?: string;
+          expires_at?: string | null;
+        }
+        Relationships: []
+      },
+      bookings: {
+        Row: {
+          id: string;
+          name: string;
+          phone: string;
+          email: string;
+          trip: string;
+          people: number;
+          notes: string | null;
+          status: string;
+          created_at: string;
+          coupon_code: string | null;
+        }
+        Insert: {
+          id?: string;
+          name: string;
+          phone: string;
+          email: string;
+          trip: string;
+          people: number;
+          notes?: string | null;
+          status?: string;
+          created_at?: string;
+          coupon_code?: string | null;
+        }
+        Update: {
+          id?: string;
+          name?: string;
+          phone?: string;
+          email?: string;
+          trip?: string;
+          people?: number;
+          notes?: string | null;
+          status?: string;
+          created_at?: string;
+          coupon_code?: string | null;
+        }
+        Relationships: []
       }
     }
     Views: {

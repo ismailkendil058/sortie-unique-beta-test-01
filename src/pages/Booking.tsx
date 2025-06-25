@@ -29,6 +29,11 @@ const Booking = () => {
   const [loadingTrips, setLoadingTrips] = useState(true);
   const [tripsError, setTripsError] = useState<string | null>(null);
 
+  const [couponCode, setCouponCode] = useState('');
+  const [couponError, setCouponError] = useState('');
+  const [discount, setDiscount] = useState(0);
+  const [appliedCoupon, setAppliedCoupon] = useState<null | { code: string; discount: number }>(null);
+
   useEffect(() => {
     const fetchTrips = async () => {
       setLoadingTrips(true);
@@ -65,7 +70,8 @@ const Booking = () => {
         people: parseInt(formData.people),
         notes: formData.notes,
         status: 'pending',
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        ...(appliedCoupon ? { coupon_code: appliedCoupon.code } : {})
       }
     ]);
     if (error) {
@@ -90,8 +96,35 @@ const Booking = () => {
     }
   };
 
+  const handleApplyCoupon = async () => {
+    setCouponError('');
+    setAppliedCoupon(null);
+    setDiscount(0);
+    if (!couponCode) {
+      setCouponError('Please enter a coupon code.');
+      return;
+    }
+    const { data, error } = await supabase
+      .from('coupons')
+      .select('*')
+      .eq('code', couponCode)
+      .eq('is_active', true)
+      .maybeSingle();
+    if (error || !data) {
+      setCouponError('Invalid or expired coupon.');
+      return;
+    }
+    if (data.expires_at && new Date(data.expires_at) < new Date()) {
+      setCouponError('This coupon has expired.');
+      return;
+    }
+    setDiscount(data.discount);
+    setAppliedCoupon({ code: data.code, discount: data.discount });
+  };
+
   const selectedTripData = trips.find(trip => trip.id === formData.trip);
   const totalPrice = selectedTripData ? selectedTripData.price * parseInt(formData.people) : 0;
+  const discountedPrice = totalPrice - (totalPrice * discount) / 100;
 
   return (
     <Layout>
@@ -209,14 +242,44 @@ const Booking = () => {
                   />
                 </div>
 
+                <div className="space-y-2">
+                  <Label htmlFor="coupon">Coupon</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="coupon"
+                      type="text"
+                      placeholder="Enter coupon code"
+                      value={couponCode}
+                      onChange={e => setCouponCode(e.target.value)}
+                      disabled={!!appliedCoupon}
+                    />
+                    <Button type="button" onClick={handleApplyCoupon} disabled={!!appliedCoupon}>
+                      {appliedCoupon ? 'Applied' : 'Apply'}
+                    </Button>
+                    {appliedCoupon && (
+                      <Button type="button" variant="outline" onClick={() => { setAppliedCoupon(null); setDiscount(0); setCouponCode(''); }}>
+                        Remove
+                      </Button>
+                    )}
+                  </div>
+                  {couponError && <div className="text-red-500 text-sm">{couponError}</div>}
+                  {appliedCoupon && <div className="text-green-600 text-sm">Coupon applied: {appliedCoupon.code} ({appliedCoupon.discount}% off)</div>}
+                </div>
+
                 {totalPrice > 0 && (
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <div className="flex justify-between items-center text-lg font-semibold">
                       <span>Total Price:</span>
-                      <span className="text-primary">
+                      <span className={discount > 0 ? "text-primary line-through" : "text-primary"}>
                         {totalPrice.toLocaleString()} {t('booking.currency')}
                       </span>
                     </div>
+                    {discount > 0 && (
+                      <div className="flex justify-between items-center text-lg font-semibold text-green-700">
+                        <span>Discounted Price:</span>
+                        <span className="text-primary">{discountedPrice.toLocaleString()} {t('booking.currency')}</span>
+                      </div>
+                    )}
                   </div>
                 )}
 
